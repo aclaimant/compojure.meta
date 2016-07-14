@@ -22,7 +22,7 @@
   "Takes a handler and meta-middleware to use with the handler"
   [handler & middleware]
   (fn [req]
-    (handler (assoc req :meta-middleware middleware))))
+    (handler (update req :meta-middleware concat middleware))))
 
 (defmacro GET [path args-list & metadata-body]
   (method 'compojure.core/GET path args-list metadata-body))
