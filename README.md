@@ -1,6 +1,9 @@
 # compojure.meta
 
-A Clojure library designed to ... well, that part is up to you.
+Work-in-progress.
+
+Improved versions of compojure methods that support middleware and metadata for
+route-specific behavior
 
 ## Usage
 
