@@ -1,4 +1,4 @@
-(defproject com.aclaimant/compojure.meta "0.1.0"
+(defproject com.aclaimant/compojure.meta "0.1.1-SNAPSHOT"
   :description "Improved versions of compojure methods that support middleware and metadata for route-specific behavior"
   :url "https://aclaimant.com"
   :license {:name "Eclipse Public License"
