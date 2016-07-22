@@ -9,34 +9,33 @@
     handler
     meta-middleware))
 
-(defn ^:private method [method path args-list metadata-body]
-  (let [[metadata body] (if (map? (first metadata-body))
-                          [(first metadata-body) (rest metadata-body)]
-                          [nil metadata-body])]
+(defn ^:private destructure-metadata-args-list-body
+  [metadata-args-list-body]
+  {:pre [(>= (count metadata-args-list-body) 2)]}
+  (let [fs (if (>= (count metadata-args-list-body) 3)
+             [first second nnext]
+             [(constantly nil) first next])]
+    (mapv #(% metadata-args-list-body) fs)))
+
+(defn ^:private method [method path metadata-args-list-body]
+  (let [[metadata args-list body] (destructure-metadata-args-list-body metadata-args-list-body)]
     `(~method ~path req#
               (let [handler# (fn ~args-list ~@body)]
                 ((#'handler-with-middleware handler# req#)
                  (assoc req# :metadata ~metadata))))))
+
+(defmacro ^:private defmethods [& methods]
+  `(do
+     ~@(for [method' methods
+             :let [f (symbol "compojure.core" (name method'))]]
+         `(defmacro ~method'
+            [path# & metadata-args-list-body#]
+            (~'method '~f path# metadata-args-list-body#)))))
+
+(defmethods GET POST PATCH PUT DELETE HEAD ANY OPTIONS)
 
 (defn wrap-meta-middleware
   "Takes a handler and meta-middleware to use with the handler"
   [handler & middleware]
   (fn [req]
     (handler (update req :meta-middleware concat middleware))))
-
-(defmacro GET [path args-list & metadata-body]
-  (method 'compojure.core/GET path args-list metadata-body))
-(defmacro POST [path args-list & metadata-body]
-  (method 'compojure.core/POST path args-list metadata-body))
-(defmacro PATCH [path args-list & metadata-body]
-  (method 'compojure.core/PATCH path args-list metadata-body))
-(defmacro PUT [path args-list & metadata-body]
-  (method 'compojure.core/PUT path args-list metadata-body))
-(defmacro DELETE [path args-list & metadata-body]
-  (method 'compojure.core/DELETE path args-list metadata-body))
-(defmacro HEAD [path args-list & metadata-body]
-  (method 'compojure.core/DELETE path args-list metadata-body))
-(defmacro ANY [path args-list & metadata-body]
-  (method 'compojure.core/ANY path args-list metadata-body))
-(defmacro OPTIONS [path args-list & metadata-body]
-  (method 'compojure.core/OPTIONS path args-list metadata-body))
