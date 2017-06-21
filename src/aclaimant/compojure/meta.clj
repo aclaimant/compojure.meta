@@ -1,6 +1,6 @@
 (ns aclaimant.compojure.meta
   (:require
-    [compojure.core]))
+    [compojure.core :as compojure]))
 
 (defn ^:private handler-with-middleware [handler {:keys [meta-middleware]}]
   (reduce
@@ -8,6 +8,13 @@
       (f acc))
     handler
     meta-middleware))
+
+(defn with-middleware [metadata handler]
+  (compojure/wrap-routes handler
+                         (fn [handler]
+                           (fn [req]
+                             ((handler-with-middleware handler req) (assoc req :metadata metadata))))))
+
 
 (defn ^:private destructure-metadata-args-list-body
   [metadata-args-list-body]
@@ -19,10 +26,10 @@
 
 (defn ^:private method [method path metadata-args-list-body]
   (let [[metadata args-list body] (destructure-metadata-args-list-body metadata-args-list-body)]
-    `(~method ~path req#
-              (let [handler# (fn ~args-list ~@body)]
-                ((#'handler-with-middleware handler# req#)
-                 (assoc req# :metadata ~metadata))))))
+    `(with-middleware ~metadata
+       (~method ~path req#
+                (let [~@args-list req#]
+                  ~@body)))))
 
 (defmacro ^:private defmethods [& methods]
   `(do
@@ -32,7 +39,7 @@
             [path# & metadata-args-list-body#]
             (~'method '~f path# metadata-args-list-body#)))))
 
-(defmethods GET POST PATCH PUT DELETE HEAD ANY OPTIONS)
+(defmethods context GET POST PATCH PUT DELETE HEAD ANY OPTIONS)
 
 (defn wrap-meta-middleware
   "Takes a handler and meta-middleware to use with the handler"
