@@ -39,7 +39,14 @@
             [path# & metadata-args-list-body#]
             (~'method '~f path# metadata-args-list-body#)))))
 
-(defmethods context GET POST PATCH PUT DELETE HEAD ANY OPTIONS)
+(defmethods GET POST PATCH PUT DELETE HEAD ANY OPTIONS)
+
+(defmacro context [path & metadata-args-list-body]
+  (let [[metadata args-list body] (destructure-metadata-args-list-body metadata-args-list-body)]
+    `(with-middleware ~metadata
+       (compojure.core/context ~path req#
+         (let [~@args-list req#]
+           (compojure.core/routes ~@body))))))
 
 (defn wrap-meta-middleware
   "Takes a handler and meta-middleware to use with the handler"
