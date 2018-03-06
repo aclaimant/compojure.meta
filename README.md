@@ -1,6 +1,6 @@
 # compojure.meta
 
-Work-in-progress.
+UNMAINTAINED
 
 Improved versions of compojure methods that support middleware and metadata for
 route-specific behavior
